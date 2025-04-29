@@ -1,16 +1,41 @@
 from bs4 import BeautifulSoup
 import requests
 import urllib.parse
+import re # Importing the regular expression module
 
-def get_vless_links(url):
+# Define a pattern to match common Persian/Arabic characters
+# This pattern includes most letters and digits used in Persian, plus common punctuation that might appear in remarks.
+# You might need to adjust this pattern based on what specifically you want to exclude.
+# This pattern looks for the Unicode range of Arabic/Persian characters, plus common numbers and some symbols.
+PERSIAN_CHARS_PATTERN = re.compile(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0030-\u0039\u0660-\u0669\s.,!?:;-]')
+
+
+def contains_persian_chars(text):
     """
-    Fetches content from a Telegram channel URL and extracts VLESS configuration links.
+    Checks if a string contains characters commonly used in Persian or Arabic.
+
+    Args:
+        text (str): The string to check.
+
+    Returns:
+        bool: True if Persian/Arabic characters are found, False otherwise.
+    """
+    if not text:
+        return False
+    # Search for the pattern in the text
+    return bool(PERSIAN_CHARS_PATTERN.search(text))
+
+
+def get_filtered_vless_links(url):
+    """
+    Fetches content from a Telegram channel URL and extracts VLESS configuration links
+    excluding those with ports 80 or 8080, and those with Persian remarks.
 
     Args:
         url (str): The URL of the Telegram channel.
 
     Returns:
-        list: A list of extracted VLESS configuration strings, or None if fetching fails.
+        list: A list of extracted and filtered VLESS configuration strings, or None if fetching fails.
     """
     try:
         response = requests.get(url)
@@ -28,28 +53,50 @@ def get_vless_links(url):
     ])
     possible_tags.extend(soup.find_all('span', class_='tgme_widget_message_text'))
     possible_tags.extend(soup.find_all('code'))
-    # Adding a more general search for span and div to catch more cases,
-    # but this might include noise, so we rely heavily on the startswith check.
+    # Adding a more general search for span and div
     possible_tags.extend(soup.find_all('span'))
     possible_tags.extend(soup.find_all('div'))
 
-    vless_configs = []
+    filtered_vless_configs = []
     for tag in possible_tags:
         text = tag.get_text().strip()
-        # *** Changed: Only check for vless:// protocol ***
+
         if text.startswith('vless://'):
-            # Decode the URL to handle potential encoding issues in the config string
             try:
+                # Decode the URL
                 decoded_text = urllib.parse.unquote(text)
-                vless_configs.append(decoded_text)
+
+                # Parse the VLESS URL to extract its components
+                parsed_url = urllib.parse.urlparse(decoded_text)
+
+                # Extract the port
+                port = parsed_url.port
+
+                # *** Check if the port is 80 or 8080 ***
+                if port is not None and (port == 80 or port == 8080):
+                    # print(f"Skipping VLESS config with filtered port: {text}") # Optional: print skipped links
+                    continue # Skip this config because its port is 80 or 8080
+
+                # *** Check if the remark (fragment) contains Persian characters ***
+                remark = parsed_url.fragment # The part after '#' is usually the remark
+                if contains_persian_chars(remark):
+                    # print(f"Skipping VLESS config with Persian remark: {remark} in {text}") # Optional: print skipped links
+                    continue # Skip this config because its remark contains Persian characters
+
+                # If both filters pass, add the config
+                filtered_vless_configs.append(decoded_text)
+
             except Exception as e:
-                print(f"Error decoding URL: {e} - {text}")
-                vless_configs.append(text) # Add the original text if decoding fails
+                # If parsing or decoding fails, skip or handle appropriately
+                print(f"Error parsing or decoding VLESS URL: {e} - {text}")
+                # Skipping configs that fail to parse/decode
+                continue
 
-    return vless_configs
+
+    return filtered_vless_configs
 
 
-def save_all_configs(configs, filename="Subs_VLESS.txt"):
+def save_all_configs(configs, filename="Subs_VLESS_No8080_NoPersianRemark.txt"):
     """
     Saves a list of configuration strings to a file.
 
@@ -60,7 +107,7 @@ def save_all_configs(configs, filename="Subs_VLESS.txt"):
     try:
         with open(filename, "w", encoding="utf-8") as f:
             f.write("\n".join(configs))
-        print(f"Saved { len(configs) } unique VLESS configs to {filename}")
+        print(f"Saved { len(configs) } unique filtered VLESS configs to {filename}")
     except IOError as e:
         print(f"Error saving configs to file {filename}: {e}")
 
@@ -70,14 +117,14 @@ if __name__ == "__main__":
         "https://t.me/s/forwardv2ray",
         "https://t.me/s/inikotesla",
         "https://t.me/s/PrivateVPNs",
-        "https://t.me/s/VlessConfig", # این کانال بیشتر محتوای vless خواهد داشت
+        "https://t.me/s/VlessConfig",
         "https://t.me/s/V2pedia",
         "https://t.me/s/v2rayNG_Matsuri",
         "https://t.me/s/PrivateVPNs",
         "https://t.me/s/proxystore11",
         "https://t.me/s/DirectVPN",
-        "https://t.me/s/VmessProtocol", # احتمالا کمتر VLESS داشته باشد
-        "https://t.me/s/OutlineVpnOfficial", # احتمالا کمتر VLESS داشته باشد
+        "https://t.me/s/VmessProtocol",
+        "https://t.me/s/OutlineVpnOfficial",
         "https://t.me/s/networknim",
         "https://t.me/s/beiten",
         "https://t.me/s/MsV2ray",
@@ -94,22 +141,22 @@ if __name__ == "__main__":
         "https://t.me/s/custom_14",
         "https://tme.cat/s/v2rayNG_VPNN",
         "https://t.me/s/v2ray_outlineir",
-        "https://t.me/s/v2_vmess", # احتمالا کمتر VLESS داشته باشد
-        "https://t.me/s/FreeVlessVpn", # این کانال بیشتر محتوای vless خواهد داشت
+        "https://t.me/s/v2_vmess",
+        "https://t.me/s/FreeVlessVpn",
         "https://t.me/s/vmess_vless_v2rayng",
         "https://tme.cat/s/PrivateVPNs",
         "https://t.me/s/freeland8",
-        "https://t.me/s/vmessiran", # احتمالا کمتر VLESS داشته باشد
-        "https://t.me/s/Outline_Vpn", # احتمالا کمتر VLESS داشته باشد
-        "https://t.me/s/vmessq", # احتمالا کمتر VLESS داشته باشد
+        "https://t.me/s/vmessiran",
+        "https://t.me/s/Outline_Vpn",
+        "https://t.me/s/vmessq",
         "https://t.me/s/WeePeeN",
         "https://tme.cat/s/V2rayNG3",
-        "https://tme.cat/s/ShadowsocksM", # احتمالا کمتر VLESS داشته باشد
-        "https://tme.cat/s/shadowsocksshop", # احتمالا کمتر VLESS داشته باشد
+        "https://tme.cat/s/ShadowsocksM",
+        "https://tme.cat/s/shadowsocksshop",
         "https://t.me/s/v2rayan",
-        "https://tme.cat/s/ShadowSocks_s", # احتمالا کمتر VLESS داشته باشد
-        "https://t.me/s/VmessProtocol", # احتمالا کمتر VLESS داشته باشد
-        "https://t.me/s/napsternetv_config", # احتمالا کمتر VLESS داشته باشد
+        "https://tme.cat/s/ShadowSocks_s",
+        "https://t.me/s/VmessProtocol",
+        "https://t.me/s/napsternetv_config",
         "https://t.me/s/Easy_Free_VPN",
         "https://t.me/s/V2Ray_FreedomIran",
         "https://t.me/s/V2RAY_VMESS_free",
@@ -160,17 +207,16 @@ if __name__ == "__main__":
         "https://tme.cat/s/Configforvpn01",
     ]
 
-    all_vless_configs = []
+    all_filtered_vless_configs = []
     for url in telegram_urls:
-        # *** Changed: Call the function that specifically gets VLESS links ***
-        configs = get_vless_links(url)
+        configs = get_filtered_vless_links(url)
         if configs:
-            all_vless_configs.extend(configs)
+            all_filtered_vless_configs.extend(configs)
 
-    if all_vless_configs:
+    if all_filtered_vless_configs:
         # Remove duplicates
-        unique_configs = list(set(all_vless_configs))
-        # *** Changed: Save to a file with a different name to distinguish VLESS configs ***
-        save_all_configs(unique_configs, filename="Subs_VLESS.txt")
+        unique_configs = list(set(all_filtered_vless_configs))
+        # Save to a file
+        save_all_configs(unique_configs, filename="Subs_VLESS_No8080_NoPersianRemark.txt")
     else:
-        print("No VLESS configs found.")
+        print("No filtered VLESS configs found.")
