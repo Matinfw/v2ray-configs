@@ -8,6 +8,15 @@ import pycountry
 from ip2geotools.databases.noncommercial import DbIpCity
 import urllib.parse
 
+# بررسی متغیرهای محیطی
+def check_env_vars():
+    required_vars = ['TELEGRAM_API_ID', 'TELEGRAM_API_HASH', 'TELEGRAM_PHONE', 'GITHUB_TOKEN']
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    if missing_vars:
+        raise ValueError(f"متغیرهای محیطی زیر تنظیم نشده‌اند: {', '.join(missing_vars)}")
+
+check_env_vars()
+
 # متغیرهای محیطی
 api_id = int(os.getenv('TELEGRAM_API_ID'))
 api_hash = os.getenv('TELEGRAM_API_HASH')
@@ -21,7 +30,7 @@ channels = [
     "https://t.me/s/iranian_vpn_free",
     "https://t.me/s/vmess_iran",
     "https://t.me/s/outline_vpn",
-    "https “‘https://t.me/s/v2ray_outline",
+    "https://t.me/s/v2ray_outline",
     "https://t.me/s/vpn_ocean",
     "https://t.me/s/iranvpntunnel",
     "https://t.me/s/pr0xy_mix",
@@ -165,7 +174,7 @@ channels = [
     "https://t.me/s/mahsaamoon1",
     "https://t.me/s/V2RAY_NEW",
     "https://t.me/s/v2RayChannel",
-    "https://t.me/s/configV2rayNG",
+    "https “‘https://t.me/s/configV2rayNG",
     "https://t.me/s/config_v2ray",
     "https://t.me/s/vpnmasi",
     "https://t.me/s/v2ray_custom",
