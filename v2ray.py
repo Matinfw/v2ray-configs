@@ -1,6 +1,3 @@
-# install required libraries if needed (e.g., in GitHub Actions)
-# pip install telethon pycountry ip2geotools
-
 import asyncio
 import os
 import re
@@ -11,10 +8,6 @@ import pycountry
 from ip2geotools.databases.noncommercial import DbIpCity
 import urllib.parse
 
-# GitHub Actions uses environment variables for secrets
-# These should be set as secrets in your GitHub repository settings
-# You can keep default values here for local testing if preferred,
-# but for security, rely on GitHub Secrets in production.
 api_id = int(os.getenv('TELEGRAM_API_ID', 'YOUR_DEFAULT_API_ID')) # Replace YOUR_DEFAULT_API_ID if needed
 api_hash = os.getenv('TELEGRAM_API_HASH', 'YOUR_DEFAULT_API_HASH') # Replace YOUR_DEFAULT_API_HASH if needed
 phone_number = os.getenv('TELEGRAM_PHONE', 'YOUR_DEFAULT_PHONE') # Replace YOUR_DEFAULT_PHONE if needed
@@ -259,14 +252,6 @@ async def main():
     except Exception as e:
         print(f"An unexpected error occurred during the main execution: {str(e)}")
 
-
-# GitHub Actions typically run a script once, not periodically in a loop.
-# The scheduling is handled by the GitHub Actions workflow file (.github/workflows/*.yml).
-# So, we remove the periodic loop and just run the main function once.
-
-# Use asyncio.run() for a simpler entry point in a single execution script
-# asyncio.run() handles loop creation and closing.
-
 if __name__ == "__main__":
     # In GitHub Actions, KeyboardInterrupt is not relevant as it's not interactive.
     # The script will run to completion or error.
@@ -277,5 +262,4 @@ if __name__ == "__main__":
         print("Script finished.")
     except Exception as e:
         print(f"An error occurred during script execution: {str(e)}")
-        # In GitHub Actions, a non-zero exit code indicates failure.
-        # raise # Re-raise the exception if you want the action to fail explicitly
+       
