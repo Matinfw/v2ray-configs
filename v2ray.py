@@ -1,14 +1,19 @@
 import asyncio
+import os
 import re
+import subprocess
+import time
 from telethon import TelegramClient
 import pycountry
 from ip2geotools.databases.noncommercial import DbIpCity
 import urllib.parse
 
-api_id = 21294482
-api_hash = '990ec4db2f39b94eb696f2058369b931'
-phone_number = '+989226562298'
+# متغیرهای محیطی
+api_id = int(os.getenv('TELEGRAM_API_ID'))
+api_hash = os.getenv('TELEGRAM_API_HASH')
+phone_number = os.getenv('TELEGRAM_PHONE')
 
+# لیست کانال‌های تلگرامی
 channels = [
     "https://t.me/s/V2rayNG_VPN",
     "https://t.me/s/configs_v2ray",
@@ -16,7 +21,7 @@ channels = [
     "https://t.me/s/iranian_vpn_free",
     "https://t.me/s/vmess_iran",
     "https://t.me/s/outline_vpn",
-    "https://t.me/s/v2ray_outline",
+    "https “‘https://t.me/s/v2ray_outline",
     "https://t.me/s/vpn_ocean",
     "https://t.me/s/iranvpntunnel",
     "https://t.me/s/pr0xy_mix",
@@ -187,18 +192,22 @@ channels = [
     "https://t.me/s/Configforvpn01"
 ]
 
+# لیست کشورهای مجاز
 allowed_countries = [
     'United States', 'Russia', 'Australia', 'United Kingdom', 'Germany',
     'Sweden', 'Finland', 'Estonia', 'Denmark', 'Luxembourg', 'Japan',
     'Singapore', 'Mexico', 'Brazil'
 ]
 
+# پورت‌های غیرمجاز
 forbidden_ports = ['80', '8080', '8181', '3128']
 
+# تابع بررسی متن فارسی
 def contains_persian(text):
     persian_pattern = re.compile(r'[\u0600-\u06FF]')
     return bool(persian_pattern.search(text))
 
+# تابع استخراج IP و پورت از کانفیگ VLESS
 def extract_ip_port(config):
     try:
         parsed = urllib.parse.urlparse(config)
@@ -209,6 +218,7 @@ def extract_ip_port(config):
     except:
         return None, None
 
+# تابع بررسی کشور سرور
 def get_country(ip):
     try:
         response = DbIpCity.get(ip, api_key='free')
@@ -218,6 +228,7 @@ def get_country(ip):
     except:
         return None
 
+# تابع اصلی جمع‌آوری کانفیگ‌ها
 async def collect_vless_configs():
     client = TelegramClient('session_name', api_id, api_hash)
     await client.start(phone=phone_number)
@@ -251,12 +262,30 @@ async def collect_vless_configs():
     await client.disconnect()
     return valid_configs
 
+# تابع اصلی
 async def main():
     configs = await collect_vless_configs()
     with open('vless_configs.txt', 'w') as f:
         for config in configs:
             f.write(config + '\n')
     print(f"تعداد کانفیگ‌های معتبر: {len(configs)}")
+    
+    # Push به GitHub
+    try:
+        subprocess.run(['git', 'config', '--global', 'user.name', 'Railway Bot'])
+        subprocess.run(['git', 'config', '--global', 'user.email', 'bot@railway.app'])
+        subprocess.run(['git', 'add', 'vless_configs.txt'])
+        subprocess.run(['git', 'commit', '-m', 'Update VLESS configs'])
+        subprocess.run(['git', 'push', 'origin', 'main'], env={'GIT_ASKPASS': 'echo', 'GIT_USERNAME': 'x-oauth-basic', 'GIT_PASSWORD': os.getenv('GITHUB_TOKEN')})
+    except Exception as e:
+        print(f"خطا در push به GitHub: {str(e)}")
+
+# اجرای دوره‌ای
+async def run_periodically():
+    while True:
+        await main()
+        print("در انتظار اجرای بعدی (6 ساعت)...")
+        await asyncio.sleep(6 * 60 * 60)  # هر 6 ساعت
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(run_periodically())
