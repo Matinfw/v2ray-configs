@@ -2,7 +2,7 @@ name: Fetch VLESS and Hysteria2 Configs
 
 on:
   schedule:
-    - cron: '0 */3 * * *' # هر ۶ ساعت
+    - cron: '0 */3 * * *' 
   workflow_dispatch:
 
 jobs:
