@@ -27,4 +27,4 @@ jobs:
           TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           TELEGRAM_PHONE: ${{ secrets.TELEGRAM_PHONE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python v2ray.py
+        run: python main.py
