@@ -1,0 +1,40 @@
+name: Run VLESS Config Collector
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # هر 6 ساعت یک‌بار اجرا می‌شود
+  workflow_dispatch: # امکان اجرای دستی
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install telethon pycountry ip2geotools
+
+    - name: Run script
+      env:
+        TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+        TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        TELEGRAM_PHONE: ${{ secrets.TELEGRAM_PHONE }}
+      run: python main.py
+
+    - name: Commit and push results
+      run: |
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
+        git add vless_configs.txt
+        git commit -m "Update VLESS configs" || echo "No changes to commit"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
