@@ -144,7 +144,7 @@ async def main():
         unique_configs = list(dict.fromkeys(configs)) 
 
         if unique_configs: 
-            output_filename = 'vless_hysteria2_configs.txt'
+            output_filename = 'V2ray_configs.txt'
             
             try:
                 with open(output_filename, 'r') as f:
