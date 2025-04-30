@@ -1,3 +1,0 @@
-telethon
-pycountry
-ip2geotools
