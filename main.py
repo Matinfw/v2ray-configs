@@ -1,222 +1,262 @@
-from bs4 import BeautifulSoup
-import requests
+import asyncio
+import re
+from telethon import TelegramClient
+import pycountry
+from ip2geotools.databases.noncommercial import DbIpCity
 import urllib.parse
-import re # Importing the regular expression module
 
-# Define a pattern to match common Persian/Arabic characters
-# This pattern includes most letters and digits used in Persian, plus common punctuation that might appear in remarks.
-# You might need to adjust this pattern based on what specifically you want to exclude.
-# This pattern looks for the Unicode range of Arabic/Persian characters, plus common numbers and some symbols.
-PERSIAN_CHARS_PATTERN = re.compile(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0030-\u0039\u0660-\u0669\s.,!?:;-]')
+api_id = 21294482
+api_hash = '990ec4db2f39b94eb696f2058369b931'
+phone_number = '+989226562298'
 
+channels = [
+    "https://t.me/s/V2rayNG_VPN",
+    "https://t.me/s/configs_v2ray",
+    "https://t.me/s/ConfigKamaprox",
+    "https://t.me/s/iranian_vpn_free",
+    "https://t.me/s/vmess_iran",
+    "https://t.me/s/outline_vpn",
+    "https://t.me/s/v2ray_outline",
+    "https://t.me/s/vpn_ocean",
+    "https://t.me/s/iranvpntunnel",
+    "https://t.me/s/pr0xy_mix",
+    "https://t.me/s/Vless_Pro",
+    "https://t.me/s/VMESS_SERVER",
+    "https://t.me/s/SERVER_VLESS",
+    "https://t.me/s/Server_iran",
+    "https://t.me/s/vmess_vless_trojan",
+    "https://t.me/s/hashmakvpn",
+    "https://t.me/s/proxy_server",
+    "https://t.me/s/V2rayConfig",
+    "https://t.me/s/MsV2ray",
+    "https://t.me/s/freconnect",
+    "https://t.me/s/server_digi",
+    "https://t.me/s/fox_vpn_free",
+    "https://t.me/s/Pars_vpn",
+    "https://t.me/s/iran_vpn_v2ray",
+    "https://t.me/s/ok_vpn",
+    "https://t.me/s/vpn_black",
+    "https://t.me/s/shahanshan_vpn",
+    "https://t.me/s/king_vpn",
+    "https://t.me/s/day_vpn",
+    "https://t.me/s/ConfigsV2ray_Plus",
+    "https://t.me/s/SHADOWSOCKS_VPN",
+    "https://t.me/s/VPNCLEAKS",
+    "https://t.me/s/aparat_vpn",
+    "https://t.me/s/Helix_Configs",
+    "https://t.me/s/ircfconfig",
+    "https://t.me/s/MTConfig",
+    "https://t.me/s/MehradHydel_VPN",
+    "https://t.me/s/Internet4Iranians",
+    "https://t.me/s/server_amireu",
+    "https://t.me/s/TeamSecureTunnel",
+    "https://t.me/s/Configs_Vpn_bali",
+    "https://t.me/s/FreeVmessVlessV2ray",
+    "https://t.me/s/EasyConfigs",
+    "https://t.me/s/Vpn_Fast",
+    "https://t.me/s/Pro_Max_Config",
+    "https://t.me/s/UnlimitedFreeConfigs",
+    "https://t.me/s/OutlineVpnOfficial",
+    "https://t.me/s/Power_Vpn",
+    "https://t.me/s/VPNIRANORG",
+    "https://t.me/s/Outline_conf",
+    "https://t.me/s/V2ray_Collector",
+    "https://t.me/s/FreakConfig",
+    "https://t.me/s/Custom_Config",
+    "https://t.me/s/VPNMODIFY",
+    "https://t.me/s/NapsternetV_VPN",
+    "https://t.me/s/Proxy_chnnel",
+    "https://t.me/s/GephConnector",
+    "https://t.me/s/iranfreeby",
+    "https://t.me/s/Azadi_az_net",
+    "https://t.me/s/VPNCUSTOMIZE",
+    "https://t.me/s/iran_azadi_vpn",
+    "https://t.me/s/Parsian_vpn",
+    "https://t.me/s/AzadNetiran",
+    "https://t.me/s/Net_Proxy_V2ray",
+    "https://t.me/s/ShadowrocketChannel",
+    "https://t.me/s/ServiceSocks",
+    "https://t.me/s/Outline_Free_Iran",
+    "https://t.me/s/proxyiranvpn",
+    "https://t.me/s/NetFaz",
+    "https://t.me/s/ProxyMTprotoTest",
+    "https://t.me/s/Proxyha_channel",
+    "https://t.me/s/irproxy_tci",
+    "https://t.me/s/iFoox",
+    "https://t.me/s/freeproxy",
+    "https://t.me/s/VpnShah",
+    "https://t.me/s/TelNET",
+    "https://t.me/s/DailyV2ray",
+    "https://t.me/s/Network_source",
+    "https://t.me/s/FreakProxy",
+    "https://t.me/s/DigiVPN",
+    "https://t.me/s/SocinConfigs",
+    "https://t.me/s/InternetGV",
+    "https://t.me/s/SpeedPlus_Config",
+    "https://t.me/s/Oneclickvpnfree",
+    "https://t.me/s/Config_for_All",
+    "https://t.me/s/FreeVpnForIran2022",
+    "https://t.me/s/NateTeam",
+    "https://t.me/s/PandoVPN",
+    "https://t.me/s/VPN_Exp",
+    "https://t.me/s/SafeNet_Server",
+    "https://t.me/s/Directvpn",
+    "https://t.me/s/NetBoxConfig",
+    "https://t.me/s/free_vpn_iran2023",
+    "https://t.me/s/AvvalTeam",
+    "https://t.me/s/iranv2ray",
+    "https://t.me/s/Daily_Free_VPN",
+    "https://t.me/s/Server_shah",
+    "https://t.me/s/v2line",
+    "https://t.me/s/forwardv2ray",
+    "https://t.me/s/inikotesla",
+    "https://t.me/s/PrivateVPNs",
+    "https://t.me/s/VlessConfig",
+    "https://t.me/s/V2pedia",
+    "https://t.me/s/v2rayNG_Matsuri",
+    "https://t.me/s/proxystore11",
+    "https://t.me/s/DirectVPN",
+    "https://t.me/s/VmessProtocol",
+    "https://t.me/s/networknim",
+    "https://t.me/s/beiten",
+    "https://t.me/s/foxrayiran",
+    "https://t.me/s/DailyV2RY",
+    "https://t.me/s/yaney_01",
+    "https://t.me/s/EliV2ray",
+    "https://t.me/s/ServerNett",
+    "https://t.me/s/v2rayng_fa2",
+    "https://t.me/s/v2rayng_org",
+    "https://t.me/s/V2rayNGvpni",
+    "https://t.me/s/custom_14",
+    "https://t.me/s/v2rayNG_VPNN",
+    "https://t.me/s/v2ray_outlineir",
+    "https://t.me/s/v2_vmess",
+    "https://t.me/s/FreeVlessVpn",
+    "https://t.me/s/vmess_vless_v2rayng",
+    "https://t.me/s/freeland8",
+    "https://t.me/s/vmessiran",
+    "https://t.me/s/Outline_Vpn",
+    "https://t.me/s/vmessq",
+    "https://t.me/s/WeePeeN",
+    "https://t.me/s/V2rayNG3",
+    "https://t.me/s/ShadowsocksM",
+    "https://t.me/s/shadowsocksshop",
+    "https://t.me/s/v2rayan",
+    "https://t.me/s/ShadowSocks_s",
+    "https://t.me/s/napsternetv_config",
+    "https://t.me/s/Easy_Free_VPN",
+    "https://t.me/s/V2Ray_FreedomIran",
+    "https://t.me/s/V2RAY_VMESS_free",
+    "https://t.me/s/v2ray_for_free",
+    "https://t.me/s/V2rayN_Free",
+    "https://t.me/s/free4allVPN",
+    "https://t.me/s/configV2rayForFree",
+    "https://t.me/s/FreeV2rays",
+    "https://t.me/s/DigiV2ray",
+    "https://t.me/s/freev2rayssr",
+    "https://t.me/s/v2rayn_server",
+    "https://t.me/s/Shadowlinkserverr",
+    "https://t.me/s/iranvpnet",
+    "https://t.me/s/mahsaamoon1",
+    "https://t.me/s/V2RAY_NEW",
+    "https://t.me/s/v2RayChannel",
+    "https://t.me/s/configV2rayNG",
+    "https://t.me/s/config_v2ray",
+    "https://t.me/s/vpnmasi",
+    "https://t.me/s/v2ray_custom",
+    "https://t.me/s/HTTPCustomLand",
+    "https://t.me/s/ViPVpn_v2ray",
+    "https://t.me/s/FreeNet1500",
+    "https://t.me/s/v2ray_ar",
+    "https://t.me/s/beta_v2ray",
+    "https://t.me/s/vip_vpn_2022",
+    "https://t.me/s/FOX_VPN66",
+    "https://t.me/s/VorTexIRN",
+    "https://t.me/s/YtTe3la",
+    "https://t.me/s/V2RayOxygen",
+    "https://t.me/s/Network_442",
+    "https://t.me/s/VPN_443",
+    "https://t.me/s/v2rayng_v",
+    "https://t.me/s/ultrasurf_12",
+    "https://t.me/s/iSeqaro",
+    "https://t.me/s/frev2rayng",
+    "https://t.me/s/frev2ray",
+    "https://t.me/s/Awlix_ir",
+    "https://t.me/s/v2rayngvpn",
+    "https://t.me/s/God_CONFIG",
+    "https://t.me/s/Configforvpn01"
+]
 
-def contains_persian_chars(text):
-    """
-    Checks if a string contains characters commonly used in Persian or Arabic.
+allowed_countries = [
+    'United States', 'Russia', 'Australia', 'United Kingdom', 'Germany',
+    'Sweden', 'Finland', 'Estonia', 'Denmark', 'Luxembourg', 'Japan',
+    'Singapore', 'Mexico', 'Brazil'
+]
 
-    Args:
-        text (str): The string to check.
+forbidden_ports = ['80', '8080', '8181', '3128']
 
-    Returns:
-        bool: True if Persian/Arabic characters are found, False otherwise.
-    """
-    if not text:
-        return False
-    # Search for the pattern in the text
-    return bool(PERSIAN_CHARS_PATTERN.search(text))
+def contains_persian(text):
+    persian_pattern = re.compile(r'[\u0600-\u06FF]')
+    return bool(persian_pattern.search(text))
 
-
-def get_filtered_vless_links(url):
-    """
-    Fetches content from a Telegram channel URL and extracts VLESS configuration links
-    excluding those with ports 80 or 8080, and those with Persian remarks.
-
-    Args:
-        url (str): The URL of the Telegram channel.
-
-    Returns:
-        list: A list of extracted and filtered VLESS configuration strings, or None if fetching fails.
-    """
+def extract_ip_port(config):
     try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching URL {url}: {e}")
+        parsed = urllib.parse.urlparse(config)
+        ip_port = parsed.netloc.split(':')
+        ip = ip_port[0]
+        port = ip_port[1] if len(ip_port) > 1 else None
+        return ip, port
+    except:
+        return None, None
+
+def get_country(ip):
+    try:
+        response = DbIpCity.get(ip, api_key='free')
+        country = response.country
+        country_name = pycountry.countries.get(alpha_2=country).name
+        return country_name
+    except:
         return None
 
-    soup = BeautifulSoup(response.content, 'html.parser')
+async def collect_vless_configs():
+    client = TelegramClient('session_name', api_id, api_hash)
+    await client.start(phone=phone_number)
+    
+    valid_configs = []
+    
+    for channel in channels:
+        channel_name = channel.split('/')[-1]
+        try:
+            async for message in client.iter_messages(channel_name, limit=100):
+                if not message.text:
+                    continue
+                    
+                if 'vless://' in message.text:
+                    configs = re.findall(r'(vless://[^\s]+)', message.text)
+                    for config in configs:
+                        if contains_persian(config):
+                            continue
+                            
+                        ip, port = extract_ip_port(config)
+                        if port in forbidden_ports:
+                            continue
+                            
+                        if ip:
+                            country = get_country(ip)
+                            if country in allowed_countries:
+                                valid_configs.append(config)
+        except Exception as e:
+            print(f"خطا در پردازش کانال {channel_name}: {str(e)}")
+    
+    await client.disconnect()
+    return valid_configs
 
-    # Search for potential tags containing configuration
-    possible_tags = soup.find_all(class_=[
-        'tgme_widget_message_text',
-        'tgme_widget_message_text js-message_text before_footer'
-    ])
-    possible_tags.extend(soup.find_all('span', class_='tgme_widget_message_text'))
-    possible_tags.extend(soup.find_all('code'))
-    # Adding a more general search for span and div
-    possible_tags.extend(soup.find_all('span'))
-    possible_tags.extend(soup.find_all('div'))
+async def main():
+    configs = await collect_vless_configs()
+    with open('vless_configs.txt', 'w') as f:
+        for config in configs:
+            f.write(config + '\n')
+    print(f"تعداد کانفیگ‌های معتبر: {len(configs)}")
 
-    filtered_vless_configs = []
-    for tag in possible_tags:
-        text = tag.get_text().strip()
-
-        if text.startswith('vless://'):
-            try:
-                # Decode the URL
-                decoded_text = urllib.parse.unquote(text)
-
-                # Parse the VLESS URL to extract its components
-                parsed_url = urllib.parse.urlparse(decoded_text)
-
-                # Extract the port
-                port = parsed_url.port
-
-                # *** Check if the port is 80 or 8080 ***
-                if port is not None and (port == 80 or port == 8080):
-                    # print(f"Skipping VLESS config with filtered port: {text}") # Optional: print skipped links
-                    continue # Skip this config because its port is 80 or 8080
-
-                # *** Check if the remark (fragment) contains Persian characters ***
-                remark = parsed_url.fragment # The part after '#' is usually the remark
-                if contains_persian_chars(remark):
-                    # print(f"Skipping VLESS config with Persian remark: {remark} in {text}") # Optional: print skipped links
-                    continue # Skip this config because its remark contains Persian characters
-
-                # If both filters pass, add the config
-                filtered_vless_configs.append(decoded_text)
-
-            except Exception as e:
-                # If parsing or decoding fails, skip or handle appropriately
-                print(f"Error parsing or decoding VLESS URL: {e} - {text}")
-                # Skipping configs that fail to parse/decode
-                continue
-
-
-    return filtered_vless_configs
-
-
-def save_all_configs(configs, filename="Subs_VLESS_No8080_NoPersianRemark.txt"):
-    """
-    Saves a list of configuration strings to a file.
-
-    Args:
-        configs (list): A list of configuration strings.
-        filename (str): The name of the file to save the configurations to.
-    """
-    try:
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write("\n".join(configs))
-        print(f"Saved { len(configs) } unique filtered VLESS configs to {filename}")
-    except IOError as e:
-        print(f"Error saving configs to file {filename}: {e}")
-
-if __name__ == "__main__":
-    telegram_urls = [
-        "https://t.me/s/v2line",
-        "https://t.me/s/forwardv2ray",
-        "https://t.me/s/inikotesla",
-        "https://t.me/s/PrivateVPNs",
-        "https://t.me/s/VlessConfig",
-        "https://t.me/s/V2pedia",
-        "https://t.me/s/v2rayNG_Matsuri",
-        "https://t.me/s/PrivateVPNs",
-        "https://t.me/s/proxystore11",
-        "https://t.me/s/DirectVPN",
-        "https://t.me/s/VmessProtocol",
-        "https://t.me/s/OutlineVpnOfficial",
-        "https://t.me/s/networknim",
-        "https://t.me/s/beiten",
-        "https://t.me/s/MsV2ray",
-        "https://t.me/s/foxrayiran",
-        "https://t.me/s/DailyV2RY",
-        "https://t.me/s/yaney_01",
-        "https://tme.cat/s/FreakConfig",
-        "https://t.me/s/EliV2ray",
-        "https://t.me/s/ServerNett",
-        "https://t.me/s/proxystore11",
-        "https://t.me/s/v2rayng_fa2",
-        "https://tme.cat/s/v2rayng_org",
-        "https://tme.cat/s/V2rayNGvpni",
-        "https://t.me/s/custom_14",
-        "https://tme.cat/s/v2rayNG_VPNN",
-        "https://t.me/s/v2ray_outlineir",
-        "https://t.me/s/v2_vmess",
-        "https://t.me/s/FreeVlessVpn",
-        "https://t.me/s/vmess_vless_v2rayng",
-        "https://tme.cat/s/PrivateVPNs",
-        "https://t.me/s/freeland8",
-        "https://t.me/s/vmessiran",
-        "https://t.me/s/Outline_Vpn",
-        "https://t.me/s/vmessq",
-        "https://t.me/s/WeePeeN",
-        "https://tme.cat/s/V2rayNG3",
-        "https://tme.cat/s/ShadowsocksM",
-        "https://tme.cat/s/shadowsocksshop",
-        "https://t.me/s/v2rayan",
-        "https://tme.cat/s/ShadowSocks_s",
-        "https://t.me/s/VmessProtocol",
-        "https://t.me/s/napsternetv_config",
-        "https://t.me/s/Easy_Free_VPN",
-        "https://t.me/s/V2Ray_FreedomIran",
-        "https://t.me/s/V2RAY_VMESS_free",
-        "https://t.me/s/v2ray_for_free",
-        "https://tme.cat/s/V2RayN_Free",
-        "https://t.me/s/free4allVPN",
-        "https://t.me/s/vpn_ocean",
-        "https://tme.cat/s/configV2rayForFree",
-        "https://t.me/s/FreeV2rays",
-        "https://t.me/s/DigiV2ray",
-        "https://t.me/s/v2rayNG_VPN",
-        "https://tme.cat/s/freev2rayssr",
-        "https://tme.cat/s/v2rayn_server",
-        "https://tme.cat/s/Shadowlinkserverr",
-        "https://t.me/s/iranvpnet",
-        "https://tme.cat/s/vmess_iran",
-        "https://tme.cat/s/mahsaamoon1",
-        "https://t.me/s/V2RAY_NEW",
-        "https://t.me/s/v2RayChannel",
-        "https://tme.cat/s/configV2rayNG",
-        "https://tme.cat/s/config_v2ray",
-        "https://tme.cat/s/vpn_proxy_custom",
-        "https://tme.cat/s/vpnmasi",
-        "https://tme.cat/s/v2ray_custom",
-        "https://tme.cat/s/VPNCUSTOMIZE",
-        "https://tme.cat/s/HTTPCustomLand",
-        "https://tme.cat/s/vpn_proxy_custom",
-        "https://tme.cat/s/ViPVpn_v2ray",
-        "https://tme.cat/s/FreeNet1500",
-        "https://tme.cat/s/v2ray_ar",
-        "https://tme.cat/s/beta_v2ray",
-        "https://tme.cat/s/vip_vpn_2022",
-        "https://tme.cat/s/FOX_VPN66",
-        "https://tme.cat/s/VorTexIRN",
-        "https://tme.cat/s/YtTe3la",
-        "https://tme.cat/s/V2RayOxygen",
-        "https://tme.cat/s/Network_442",
-        "https://tme.cat/s/VPN_443",
-        "https://tme.cat/s/v2rayng_v",
-        "https://tme.cat/s/ultrasurf_12",
-        "https://tme.cat/s/iSeqaro",
-        "https://tme.cat/s/frev2rayng",
-        "https://tme.cat/s/frev2ray",
-        "https://tme.cat/s/FreakConfig",
-        "https://tme.cat/s/Awlix_ir",
-        "https://tme.cat/s/v2rayngvpn",
-        "https://tme.cat/s/God_CONFIG",
-        "https://tme.cat/s/Configforvpn01",
-    ]
-
-    all_filtered_vless_configs = []
-    for url in telegram_urls:
-        configs = get_filtered_vless_links(url)
-        if configs:
-            all_filtered_vless_configs.extend(configs)
-
-    if all_filtered_vless_configs:
-        # Remove duplicates
-        unique_configs = list(set(all_filtered_vless_configs))
-        # Save to a file
-        save_all_configs(unique_configs, filename="Subs_VLESS_No8080_NoPersianRemark.txt")
-    else:
-        print("No filtered VLESS configs found.")
+if __name__ == '__main__':
+    asyncio.run(main())
