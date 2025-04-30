@@ -1,5 +1,4 @@
-# install required libraries if needed (e.g., in GitHub Actions)
-# pip install telethon pycountry ip2geotools
+
 
 import asyncio
 import os
